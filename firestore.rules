@@ -1,0 +1,130 @@
+rules_version = '2';
+
+// SupplierDrop security rules — deny by default, least privilege.
+// Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && me().role == 'admin';
+    }
+
+    function isActive() {
+      return isSignedIn() && me().status == 'active';
+    }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      // Users read their own profile; admins read (and list) everyone.
+      allow get: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+
+      // Signup: users may only create their OWN doc, always as an active
+      // merchant — self-promotion to admin is impossible.
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == 'merchant'
+        && request.resource.data.status == 'active'
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 200
+        && request.resource.data.keys().hasOnly(
+             ['name', 'email', 'role', 'status', 'createdAt', 'lastActiveAt', 'photoURL']);
+
+      // Users may only touch cosmetic fields on themselves (never role/status).
+      // Admins may only change role/status (never impersonate profile data),
+      // and never their own doc (prevents accidental self-demotion/lockout).
+      allow update: if
+        (isSignedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['name', 'photoURL', 'lastActiveAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 100)
+        || (isAdmin() && request.auth.uid != uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['role', 'status'])
+          && request.resource.data.role in ['merchant', 'admin']
+          && request.resource.data.status in ['active', 'suspended']);
+
+      allow delete: if false;
+    }
+
+    // ---------- products ----------
+    match /products/{id} {
+      // Merchants see active products only (their queries must filter
+      // active == true); admins see everything.
+      allow get: if isActive() && (resource.data.active == true || isAdmin());
+      allow list: if isActive() && (resource.data.active == true || isAdmin());
+
+      allow create, update: if isAdmin()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 5000
+        && request.resource.data.price is number
+        && request.resource.data.price >= 0
+        && request.resource.data.active is bool
+        && request.resource.data.images is list
+        && request.resource.data.images.size() <= 8;
+      allow delete: if isAdmin();
+    }
+
+    // ---------- sourcingRequests ----------
+    match /sourcingRequests/{id} {
+      // Merchants create requests only as themselves, only while active.
+      allow create: if isActive()
+        && request.resource.data.merchantId == request.auth.uid
+        && request.resource.data.status == 'new'
+        && request.resource.data.productName is string
+        && request.resource.data.productName.size() <= 200
+        && (!request.resource.data.keys().hasAny(['note'])
+            || (request.resource.data.note is string
+                && request.resource.data.note.size() <= 500));
+
+      // Merchants read their own; admins read all.
+      allow get, list: if isSignedIn()
+        && (resource.data.merchantId == request.auth.uid || isAdmin());
+
+      // Only admins move a request through the pipeline; nothing else changes.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['new', 'contacted', 'quoted', 'closed'];
+      allow delete: if isAdmin();
+    }
+
+    // ---------- settings ----------
+    match /settings/{id} {
+      // Merchants need the WhatsApp number/template to build the wa.me link.
+      allow read: if isActive();
+      allow write: if isAdmin()
+        && request.resource.data.whatsappNumber is string
+        && request.resource.data.whatsappNumber.size() <= 20
+        && request.resource.data.messageTemplate is string
+        && request.resource.data.messageTemplate.size() <= 1000
+        && (!request.resource.data.keys().hasAny(['notifyEmails'])
+            || (request.resource.data.notifyEmails is string
+                && request.resource.data.notifyEmails.size() <= 500));
+    }
+
+    // Outbound email queue: written only by the Cloud Function (Admin SDK
+    // bypasses rules) and consumed by the Trigger Email extension. No client access.
+    match /mail/{id} {
+      allow read, write: if false;
+    }
+
+    // Everything else: denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
