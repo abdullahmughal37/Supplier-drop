@@ -152,8 +152,8 @@ export default function SignUp() {
             <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-[1.5] text-[#374151]">
               <input type="checkbox" required className="mt-0.5 h-4 w-4 flex-none cursor-pointer accent-brand" />
               <span>
-                I agree to the <a href="#" className="text-brand hover:text-brand-hover">Terms</a> and{" "}
-                <a href="#" className="text-brand hover:text-brand-hover">Privacy Policy</a>
+                I agree to the <a href="/terms" target="_blank" className="text-brand hover:text-brand-hover">Terms</a> and{" "}
+                <a href="/privacy" target="_blank" className="text-brand hover:text-brand-hover">Privacy Policy</a>
               </span>
             </label>
             <button

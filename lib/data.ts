@@ -20,12 +20,12 @@ export const steps = [
   { n: 4, title: "Start Selling", body: "Orders fulfill automatically while you focus on marketing and growth." },
 ];
 
-export type Product = { name: string; margin: string; shipping: string; rating: string; supplier: string };
+export type Product = { name: string; margin: string; shipping: string; rating: string; supplier: string; img: string };
 export const products: Product[] = [
-  { name: "Aura Desk Lamp", margin: "68%", shipping: "4–6 days", rating: "4.9", supplier: "Lumina Co." },
-  { name: "Flow Water Bottle", margin: "61%", shipping: "3–5 days", rating: "4.8", supplier: "HydraWorks" },
-  { name: "Nomad Card Wallet", margin: "72%", shipping: "5–8 days", rating: "4.9", supplier: "Craft&Co" },
-  { name: "Halo Ring Light", margin: "58%", shipping: "4–7 days", rating: "4.7", supplier: "Lumina Co." },
+  { name: "Aura Desk Lamp", margin: "68%", shipping: "4–6 days", rating: "4.9", supplier: "Lumina Co.", img: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80" },
+  { name: "Flow Water Bottle", margin: "61%", shipping: "3–5 days", rating: "4.8", supplier: "HydraWorks", img: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&q=80" },
+  { name: "Nomad Card Wallet", margin: "72%", shipping: "5–8 days", rating: "4.9", supplier: "Craft&Co", img: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80" },
+  { name: "Halo Ring Light", margin: "58%", shipping: "4–7 days", rating: "4.7", supplier: "Lumina Co.", img: "https://images.unsplash.com/photo-1673196649671-eb09066ad6c1?w=800&q=80" },
 ];
 
 export const testimonials = [

@@ -180,8 +180,9 @@ export default function Home() {
           <div className="grid grid-cols-[repeat(auto-fit,minmax(255px,1fr))] gap-5">
             {products.map((p) => (
               <div key={p.name} className="overflow-hidden rounded-2xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-card">
-                <div className="relative grid aspect-[4/3] place-items-center bg-[repeating-linear-gradient(45deg,#F3F4F6_0_12px,#EDEFF2_12px_24px)]">
-                  <span className="font-mono text-xs text-gray-400">product photo</span>
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#F3F4F6]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.img} alt={p.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-105" />
                   <span className="absolute left-3 top-3 rounded-full bg-[#ECFDF3] px-2.5 py-[5px] text-xs font-bold text-[#16A34A]">{p.margin} margin</span>
                 </div>
                 <div className="p-5">
@@ -309,16 +310,20 @@ export default function Home() {
               <Logo />
               <p className="mt-3 max-w-[260px] text-sm leading-[1.65] text-muted">The smarter way to source &amp; scale. Discover, import, and automate winning products for Shopify.</p>
             </div>
-            {[
-              ["Products", ["Catalog", "Features", "Integrations", "Dashboard"]],
-              ["Company", ["About", "Careers", "Press", "Partners"]],
-              ["Resources", ["Help Center", "Blog", "API Docs", "Pricing"]],
-              ["Legal", ["Privacy", "Terms", "Security", "DPA"]],
-            ].map(([title, links]) => (
-              <nav key={title as string} aria-label={title as string}>
-                <p className="mb-4 text-[13px] font-bold uppercase tracking-[0.06em]">{title as string}</p>
+            {(
+              [
+                ["Products", [["Catalog", "#products"], ["Features", "#features"], ["Integrations", "#suppliers"], ["Dashboard", "/dashboard"]]],
+                ["Company", [["How It Works", "#how"], ["Testimonials", "#top"], ["Pricing", "#pricing"], ["Get Started", "/signup"]]],
+                ["Resources", [["Help Center", "#faq"], ["FAQ", "#faq"], ["Sign In", "/signin"], ["Create Account", "/signup"]]],
+                ["Legal", [["Privacy", "/privacy"], ["Terms", "/terms"], ["Security", "/privacy"], ["Contact", "mailto:husnainumer07@gmail.com"]]],
+              ] as [string, [string, string][]][]
+            ).map(([title, links]) => (
+              <nav key={title} aria-label={title}>
+                <p className="mb-4 text-[13px] font-bold uppercase tracking-[0.06em]">{title}</p>
                 <div className="flex flex-col gap-[11px] text-sm">
-                  {(links as string[]).map((l) => <a key={l} href="#" className="text-muted hover:text-brand">{l}</a>)}
+                  {links.map(([l, href]) => (
+                    <a key={l} href={href} className="text-muted hover:text-brand">{l}</a>
+                  ))}
                 </div>
               </nav>
             ))}
